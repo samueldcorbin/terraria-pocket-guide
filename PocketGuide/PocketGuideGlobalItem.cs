@@ -45,16 +45,21 @@ public class PocketGuideGlobalItem : GlobalItem
 
 	public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
 	{
-		if (item.type == ItemID.GuideVoodooDoll)
-		{
-			string text = Lang.SupportGlyphs(Language.GetTextValue("Mods.PocketGuide.CommonTooltips.RightClickDeactivate"));
-			var line = new TooltipLine(Mod, "PocketGuideToggle", text);
-			int idx = tooltips.FindIndex(t => t.Name == "JourneyResearch");
-			if (idx >= 0)
-				tooltips.Insert(idx, line);
-			else
-				tooltips.Add(line);
-		}
+		string fullTooltip = item.type == ItemID.GuideVoodooDoll
+			? Language.GetTextValue("ItemTooltip.DontHurtCrittersBook")
+			: Language.GetTextValue("ItemTooltip.DontHurtCrittersBookInactive");
+
+		// Extract the last line (the toggle instruction)
+		int lastNewline = fullTooltip.LastIndexOf('\n');
+		string toggleText = lastNewline >= 0 ? fullTooltip[(lastNewline + 1)..] : fullTooltip;
+		toggleText = Lang.SupportGlyphs(toggleText);
+
+		var line = new TooltipLine(Mod, "PocketGuideToggle", toggleText);
+		int idx = tooltips.FindIndex(t => t.Name == "JourneyResearch");
+		if (idx >= 0)
+			tooltips.Insert(idx, line);
+		else
+			tooltips.Add(line);
 	}
 
 	public override bool CanAccessoryBeEquippedWith(Item equippedItem, Item incomingItem, Player player)
