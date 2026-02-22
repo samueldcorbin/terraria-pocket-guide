@@ -7,7 +7,7 @@
 - [x] Dev environment setup (VSCode + C# Dev Kit, hot reload, -skipselect, launch.json) — see tasks/dev-setup-guide.md
 
 ## TODO
-- [ ] Implement Pocket Guide toggle item (ModItem with on/off state, sprite flip) — see tasks/toggle-item.md
+- [x] Implement Guide Voodoo Doll toggle (GlobalItem right-click on/off, dimmed sprite) — see tasks/toggle-item.md
 - [ ] Hook into item hover to show Guide recipe lookup when doll is active — see tasks/recipe-hover.md
 - [ ] Design and implement the recipe tooltip UI overlay — see tasks/recipe-ui.md
 - [ ] Localization (.hjson) and build.txt polish — see tasks/localization-polish.md

@@ -1,22 +1,22 @@
 # Implement Guide Voodoo Doll Toggle Item
 
-## Goal
-Create a ModItem that uses the existing Guide Voodoo Doll as its base concept. It sits in inventory, Void Bag, or accessory slot. It has an on/off toggle state (like Void Bag or Guide to Critter Companionship).
+## Status: Complete
 
-## Behavior
-- Right-click to toggle on/off
-- When toggled on: activates recipe hover lookup system
-- When toggled off: inert
-- Sprite changes between states (flip/rotate for off state)
+## What was built
+- `PocketGuidePlayer` (ModPlayer) — stores `DollActive` (persisted toggle) and `DollPresent` (per-frame presence flag)
+- `PocketGuideGlobalItem` (GlobalItem) — hooks into vanilla Guide Voodoo Doll (ItemID 267):
+  - Right-click to toggle active/inactive
+  - `UpdateInventory` + `UpdateAccessory` set `DollPresent = true`
+  - `PreDrawInInventory` dims the sprite at 50% opacity when inactive
 
-## Implementation approach
-- Subclass ModItem
-- Store toggle state (likely a bool on the ModItem instance or a ModPlayer field)
-- Override appropriate hooks for right-click toggle
-- Use vanilla Guide Voodoo Doll item texture as base, apply transform for off state
-- Needs to work from inventory, Void Bag, and accessory slots
+## How vanilla works (from decompiled source)
+- `Player.UpdateEquips` loops inventory slots 0-57, calling `RefreshMechanicalAccsFromItemType` — this is how Critter Companionship works from inventory/void bag
+- `Player.UpdateEquips` loops accessory slots 3-9, calling `ApplyEquipFunctional` — this is how Guide Voodoo Doll sets `killGuide = true`
+- Void bag items get inventory treatment if `ItemID.Sets.WorksInVoidBag[type]` is true
+- Guide Voodoo Doll (267): `accessory = true`, `maxStack = CommonMaxStack`
 
-## Open questions
-- Should the toggle state persist per-player (ModPlayer) or per-item-instance?
-- How does Void Bag detect its toggle state? Mirror that pattern.
-- Exact sprite treatment for off state — user mentioned rotate or mirror.
+## Design decisions
+- Toggle state on ModPlayer (not per-item) — simpler, one toggle per player
+- Two bools: `DollActive` (user's choice, persisted) + `DollPresent` (is doll on player this frame)
+- Recipe hover (later task) checks `DollActive && DollPresent`
+- No changes to vanilla `killGuide` behavior
