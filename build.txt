@@ -1,4 +1,4 @@
-displayName = Guide Voodoo Doll Mod
-author = terraria-guide-doll
+displayName = Pocket Guide
+author = terraria-pocket-guide
 version = 0.1.0
 includePDB = true

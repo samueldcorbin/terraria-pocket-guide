@@ -3,8 +3,8 @@
   <Import Project="$(MSBuildExtensionsPath)/../tModLoader/tModLoader.targets" />
 
   <PropertyGroup>
-    <AssemblyName>GuideVoodooDollMod</AssemblyName>
-    <RootNamespace>GuideVoodooDollMod</RootNamespace>
+    <AssemblyName>PocketGuide</AssemblyName>
+    <RootNamespace>PocketGuide</RootNamespace>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
