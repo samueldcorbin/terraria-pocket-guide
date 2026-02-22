@@ -1,0 +1,17 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch tModLoader",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "C:/Games/Steam/steamapps/common/tModLoader/dotnet/dotnet.exe",
+            "args": [
+                "C:/Games/Steam/steamapps/common/tModLoader/tModLoader.dll",
+                "-skipselect",
+                "\"TestPlayer:TestWorld\""
+            ],
+            "cwd": "C:/Games/Steam/steamapps/common/tModLoader"
+        }
+    ]
+}

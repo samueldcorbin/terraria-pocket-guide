@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="$(MSBuildExtensionsPath)/../tModLoader/tModLoader.targets" />
+  <Import Project="C:/Games/Steam/steamapps/common/tModLoader/tMLMod.targets" />
 
   <PropertyGroup>
     <AssemblyName>PocketGuide</AssemblyName>
