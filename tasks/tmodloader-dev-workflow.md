@@ -11,7 +11,8 @@
 - **In-game**: Workshop > Develop Mods > "Build + Reload" — compiles .cs, packages .tmod, reloads
 - **Visual Studio**: F5 builds + launches with debugger attached
 - **No true hot-reload** — "Build + Reload" always kicks to main menu
-- **Edit and Continue** (`-eac` flag, Windows+VS only) — patches running code for supported changes without reload
+- **Hot Reload via VSCode C# Dev Kit** — set `csharp.experimental.debug.hotReload: true`, apply changes with Ctrl+Shift+Enter. Requires .NET 8+ on Linux (which tModLoader targets). Same EnC restrictions (can't add types/change signatures) but great for logic tweaks and UI iteration.
+- **Edit and Continue** (`-eac` flag, Windows+VS only) — equivalent feature in full Visual Studio
 
 ## Developer Tools
 - `Mod.Logger.Info/Warn/Error()` — log4net, writes to client.log
