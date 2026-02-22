@@ -1,16 +1,11 @@
 Items: {
 	PocketGuideItem: {
 		DisplayName: Pocket Guide
-		Tooltip:
-			'''
-			Placeholder
-			<right> to deactivate'''
+		Tooltip: Better text here
 	}
+
 	InactivePocketGuideItem: {
 		DisplayName: Pocket Guide (Inactive)
-		Tooltip:
-			'''
-			Placeholder
-			<right> to activate'''
+		Tooltip: Better text here
 	}
 }
