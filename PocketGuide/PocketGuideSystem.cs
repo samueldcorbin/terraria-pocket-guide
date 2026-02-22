@@ -22,7 +22,7 @@ public class PocketGuideSystem : ModSystem
 		var mp = Main.LocalPlayer.GetModPlayer<PocketGuidePlayer>();
 		int hoverType = Main.HoverItem.type;
 
-		if (!mp.DollActive || !mp.DollPresent || Main.HoverItem.IsAir)
+		if (!mp.DollPresent || Main.HoverItem.IsAir)
 		{
 			HoverRecipes.Clear();
 			_lastHoverItemType = 0;
