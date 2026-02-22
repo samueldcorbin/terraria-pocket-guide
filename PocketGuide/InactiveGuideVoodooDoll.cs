@@ -15,15 +15,6 @@ public class InactiveGuideVoodooDoll : ModItem
 		Item.CloneDefaults(ItemID.GuideVoodooDoll);
 	}
 
-	public override bool CanRightClick() => Item.stack == 1;
-
-	public override bool ConsumeItem(Player player) => false;
-
-	public override void RightClick(Player player)
-	{
-		Item.ChangeItemType(ItemID.GuideVoodooDoll);
-	}
-
 	public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
 	{
 		drawColor *= 0.5f;
