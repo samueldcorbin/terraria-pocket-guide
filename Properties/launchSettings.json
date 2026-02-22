@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "tModLoader": {
+      "commandName": "Executable",
+      "executablePath": "dotnet",
+      "commandLineArgs": "$(tMLPath)",
+      "workingDirectory": "$(tMLSteamPath)"
+    }
+  }
+}

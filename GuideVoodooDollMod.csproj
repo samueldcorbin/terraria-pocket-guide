@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="$(MSBuildExtensionsPath)/../tModLoader/tModLoader.targets" />
+
+  <PropertyGroup>
+    <AssemblyName>GuideVoodooDollMod</AssemblyName>
+    <RootNamespace>GuideVoodooDollMod</RootNamespace>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+</Project>

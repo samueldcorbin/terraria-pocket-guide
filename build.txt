@@ -1,0 +1,4 @@
+displayName = Guide Voodoo Doll Mod
+author = terraria-guide-doll
+version = 0.1.0
+includePDB = true

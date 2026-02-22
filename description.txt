@@ -1,0 +1,1 @@
+Hold a Guide Voodoo Doll to see recipe info when hovering over items.
