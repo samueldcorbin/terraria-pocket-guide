@@ -35,10 +35,10 @@ public class InactiveGuideVoodooDoll : ModItem
 		var center = new Vector2(frame.Width / 2f, frame.Height / 2f);
 		spriteBatch.Draw(
 			texture,
-			position + center * scale,
+			position + (center - origin) * scale,
 			frame,
 			drawColor,
-			MathHelper.PiOver2,
+			MathHelper.Pi,
 			center,
 			scale,
 			SpriteEffects.None,
