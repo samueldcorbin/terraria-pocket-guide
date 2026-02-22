@@ -9,5 +9,6 @@
 ## TODO
 - [x] Implement Guide Voodoo Doll toggle (GlobalItem right-click on/off, dimmed sprite) — see tasks/toggle-item.md
 - [x] Hook into item hover to show Guide recipe lookup when doll is active — see tasks/recipe-hover.md
-- [ ] Design and implement the recipe tooltip UI overlay — see tasks/recipe-ui.md
+- [x] Debug text rendering for recipe list (temporary, verifies recipe data) — see tasks/recipe-ui.md
+- [ ] Design and implement the recipe tooltip UI overlay (replace debug text with proper UI) — see tasks/recipe-ui.md
 - [ ] Localization (.hjson) and build.txt polish — see tasks/localization-polish.md
