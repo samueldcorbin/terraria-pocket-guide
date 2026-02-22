@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace PocketGuide;
@@ -39,6 +41,20 @@ public class PocketGuideGlobalItem : GlobalItem
 	{
 		if (item.type == ItemID.GuideVoodooDoll)
 			player.GetModPlayer<PocketGuidePlayer>().DollPresent = true;
+	}
+
+	public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
+	{
+		if (item.type == ItemID.GuideVoodooDoll)
+		{
+			string text = Lang.SupportGlyphs(Language.GetTextValue("Mods.PocketGuide.CommonTooltips.RightClickDeactivate"));
+			var line = new TooltipLine(Mod, "PocketGuideToggle", text);
+			int idx = tooltips.FindIndex(t => t.Name == "JourneyResearch");
+			if (idx >= 0)
+				tooltips.Insert(idx, line);
+			else
+				tooltips.Add(line);
+		}
 	}
 
 	public override bool CanAccessoryBeEquippedWith(Item equippedItem, Item incomingItem, Player player)

@@ -1,0 +1,12 @@
+Items: {
+	InactiveGuideVoodooDoll: {
+		DisplayName: Guide Voodoo Doll (Inactive)
+		Tooltip:
+			'''
+			{$ItemTooltip.GuideVoodooDoll}
+			{$ItemTooltip.DontHurtCrittersBookInactive}
+			'''
+	}
+}
+
+CommonTooltips.RightClickDeactivate: <right> to deactivate effects
