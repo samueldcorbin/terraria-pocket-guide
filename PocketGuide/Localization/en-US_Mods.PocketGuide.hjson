@@ -1,6 +1,16 @@
 Items: {
-	InactiveGuideVoodooDoll: {
-		DisplayName: Guide Voodoo Doll (Inactive)
-		Tooltip: "{$ItemTooltip.GuideVoodooDoll}"
+	PocketGuideItem: {
+		DisplayName: Pocket Guide
+		Tooltip:
+			'''
+			Placeholder
+			<right> to deactivate'''
+	}
+	InactivePocketGuideItem: {
+		DisplayName: Pocket Guide (Inactive)
+		Tooltip:
+			'''
+			Placeholder
+			<right> to activate'''
 	}
 }

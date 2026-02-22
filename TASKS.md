@@ -11,4 +11,5 @@
 - [x] Hook into item hover to show Guide recipe lookup when doll is active — see tasks/recipe-hover.md
 - [x] Debug text rendering for recipe list (temporary, verifies recipe data) — see tasks/recipe-ui.md
 - [ ] Design and implement the recipe tooltip UI overlay (replace debug text with proper UI) — see tasks/recipe-ui.md
+- [ ] Add Guide NPC dialogue reacting to player having a Pocket Guide in inventory
 - [ ] Localization (.hjson) and build.txt polish — see tasks/localization-polish.md
