@@ -12,4 +12,5 @@
 - [x] Debug text rendering for recipe list (temporary, verifies recipe data) — see tasks/recipe-ui.md
 - [ ] Design and implement the recipe tooltip UI overlay (replace debug text with proper UI) — see tasks/recipe-ui.md
 - [ ] Add Guide NPC dialogue reacting to player having a Pocket Guide in inventory
-- [ ] Localization (.hjson) and build.txt polish — see tasks/localization-polish.md
+- [ ] Localization (.hjson) and build.txt polish
+- [ ] Test and fix controller support (toggle, recipe UI, tooltips)
