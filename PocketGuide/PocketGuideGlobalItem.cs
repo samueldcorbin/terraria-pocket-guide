@@ -15,7 +15,7 @@ public class PocketGuideGlobalItem : GlobalItem
 
 	public override bool CanRightClick(Item item)
 	{
-		return true;
+		return item.stack == 1;
 	}
 
 	public override bool ConsumeItem(Item item, Player player)
