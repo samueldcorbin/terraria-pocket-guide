@@ -10,7 +10,9 @@
 - [x] Implement Guide Voodoo Doll toggle (GlobalItem right-click on/off, dimmed sprite) — see tasks/toggle-item.md
 - [x] Hook into item hover to show Guide recipe lookup when doll is active — see tasks/recipe-hover.md
 - [x] Debug text rendering for recipe list (temporary, verifies recipe data) — see tasks/recipe-ui.md
-- [ ] Design and implement the recipe tooltip UI overlay (replace debug text with proper UI) — see tasks/recipe-ui.md
+- [x] Patch vanilla Guide crafting UI with reactive material slot (IL patches) — see tasks/recipe-ui.md
+- [ ] In-game test: verify reactive material slot, interaction suppression, Guide-dead check
+- [ ] Change "Place a material here" text to "Hover or pick up an item" (IL patch or localization override)
 - [ ] Add Guide NPC dialogue reacting to player having a Pocket Guide in inventory
 - [ ] Localization (.hjson) and build.txt polish
 - [ ] Test and fix controller support (toggle, recipe UI, tooltips)
