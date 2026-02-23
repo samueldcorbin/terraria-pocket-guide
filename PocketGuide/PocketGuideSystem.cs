@@ -16,6 +16,9 @@ public class PocketGuideSystem : ModSystem
 	public static bool ForceGuideUI { get; private set; }
 	private static bool _wasForceGuideUI;
 	private static int _lastSourceType;
+	private static int[] _savedAvailableRecipe;
+	private static float[] _savedAvailableRecipeY;
+	private static int _savedNumRecipes;
 	private static int _savedFocusRecipe;
 
 	public override void Load()
@@ -55,27 +58,30 @@ public class PocketGuideSystem : ModSystem
 				: (player.mouseInterface && !Main.HoverItem.IsAir) ? Main.HoverItem.type
 				: 0;
 
+			// Non-material items can't have guide recipes; treat like air.
+			bool sourceMaterial = sourceType != 0 &&
+				(!Main.mouseItem.IsAir ? Main.mouseItem.material : Main.HoverItem.material);
+
 			if (sourceType != _lastSourceType)
 			{
 				_lastSourceType = sourceType;
-				if (sourceType != 0)
+
+				if (sourceType != 0 && sourceMaterial)
 				{
 					if (!ForceGuideUI)
-						_savedFocusRecipe = Main.focusRecipe;
+						SaveCraftingState();
 					Main.guideItem.SetDefaults(sourceType);
 					Recipe.FindRecipes();
 					if (Main.numAvailableRecipes == 0)
 					{
 						Main.guideItem = new Item();
-						Recipe.FindRecipes();
-						RestoreFocusRecipe();
+						RestoreCraftingState();
 					}
 				}
-				else
+				else if (ForceGuideUI)
 				{
 					Main.guideItem = new Item();
-					Recipe.FindRecipes();
-					RestoreFocusRecipe();
+					RestoreCraftingState();
 				}
 			}
 
@@ -89,8 +95,7 @@ public class PocketGuideSystem : ModSystem
 			{
 				Main.InGuideCraftMenu = false;
 				Main.guideItem = new Item();
-				Recipe.FindRecipes();
-				RestoreFocusRecipe();
+				RestoreCraftingState();
 			}
 			_lastSourceType = 0;
 		}
@@ -98,10 +103,24 @@ public class PocketGuideSystem : ModSystem
 		_wasForceGuideUI = ForceGuideUI;
 	}
 
-	private static void RestoreFocusRecipe()
+	private static void SaveCraftingState()
 	{
-		Main.focusRecipe = Math.Clamp(_savedFocusRecipe, 0,
-			Math.Max(0, Main.numAvailableRecipes - 1));
+		_savedAvailableRecipe ??= new int[Main.availableRecipe.Length];
+		_savedAvailableRecipeY ??= new float[Main.availableRecipeY.Length];
+		_savedNumRecipes = Main.numAvailableRecipes;
+		_savedFocusRecipe = Main.focusRecipe;
+		Array.Copy(Main.availableRecipe, _savedAvailableRecipe, Main.availableRecipe.Length);
+		Array.Copy(Main.availableRecipeY, _savedAvailableRecipeY, Main.availableRecipeY.Length);
+	}
+
+	private static void RestoreCraftingState()
+	{
+		if (_savedAvailableRecipe == null)
+			return;
+		Main.numAvailableRecipes = _savedNumRecipes;
+		Main.focusRecipe = _savedFocusRecipe;
+		Array.Copy(_savedAvailableRecipe, Main.availableRecipe, _savedAvailableRecipe.Length);
+		Array.Copy(_savedAvailableRecipeY, Main.availableRecipeY, _savedAvailableRecipeY.Length);
 	}
 
 	// Prevent dropItemCheck from "returning" virtual guideItem to inventory.
