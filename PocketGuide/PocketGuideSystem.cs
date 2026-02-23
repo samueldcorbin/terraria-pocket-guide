@@ -15,6 +15,7 @@ public class PocketGuideSystem : ModSystem
 {
 	public static bool ForceGuideUI { get; private set; }
 	private static bool _wasForceGuideUI;
+	private static int _lastSourceType;
 
 	public override void Load()
 	{
@@ -49,26 +50,32 @@ public class PocketGuideSystem : ModSystem
 
 		if (pocketGuideActive)
 		{
-			// mouseItem is always current; HoverItem is from previous frame's draw.
-			// Gate HoverItem on mouseInterface (also from previous draw) so that
-			// moving the mouse to empty space / the world clears the guide.
-			Item source = !Main.mouseItem.IsAir ? Main.mouseItem
-				: (player.mouseInterface && !Main.HoverItem.IsAir) ? Main.HoverItem
-				: new Item();
+			int sourceType = !Main.mouseItem.IsAir ? Main.mouseItem.type
+				: (player.mouseInterface && !Main.HoverItem.IsAir) ? Main.HoverItem.type
+				: 0;
 
-			if (source.type != Main.guideItem.type)
+			if (sourceType != _lastSourceType)
 			{
-				Main.guideItem = source.Clone();
-				Recipe.FindRecipes();
+				_lastSourceType = sourceType;
+				if (sourceType != 0)
+				{
+					Main.guideItem.SetDefaults(sourceType);
+					Recipe.FindRecipes();
+					if (Main.numAvailableRecipes == 0)
+					{
+						Main.guideItem = new Item();
+						Recipe.FindRecipes();
+					}
+				}
+				else
+				{
+					Main.guideItem = new Item();
+					Recipe.FindRecipes();
+				}
 			}
 
-			ForceGuideUI = !Main.guideItem.IsAir && Main.numAvailableRecipes > 0;
+			ForceGuideUI = !Main.guideItem.IsAir;
 			Main.InGuideCraftMenu = ForceGuideUI;
-
-			// Clear guideItem when not showing UI, so vanilla dropItemCheck
-			// doesn't "return" our cloned item to the player's inventory.
-			if (!ForceGuideUI)
-				Main.guideItem = new Item();
 		}
 		else
 		{
@@ -79,6 +86,7 @@ public class PocketGuideSystem : ModSystem
 				Main.guideItem = new Item();
 				Recipe.FindRecipes();
 			}
+			_lastSourceType = 0;
 		}
 
 		_wasForceGuideUI = ForceGuideUI;
