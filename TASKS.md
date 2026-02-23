@@ -11,8 +11,8 @@
 - [x] Hook into item hover to show Guide recipe lookup when doll is active — see tasks/recipe-hover.md
 - [x] Debug text rendering for recipe list (temporary, verifies recipe data) — see tasks/recipe-ui.md
 - [x] Patch vanilla Guide crafting UI with reactive material slot (IL patches) — see tasks/recipe-ui.md
-- [ ] In-game test: verify reactive material slot, interaction suppression, Guide-dead check
-- [ ] Change "Place a material here" text to "Hover or pick up an item" (IL patch or localization override)
+- [x] Fix 5 Guide UI bugs (clear on un-hover, flicker, wrong text, missing text, non-craftable items)
+- [ ] In-game test: hover/un-hover/pickup/non-craftable items, interaction suppression, Guide-dead check
 - [ ] Add Guide NPC dialogue reacting to player having a Pocket Guide in inventory
 - [ ] Localization (.hjson) and build.txt polish
 - [ ] Test and fix controller support (toggle, recipe UI, tooltips)
