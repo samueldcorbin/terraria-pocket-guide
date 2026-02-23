@@ -1,117 +1,160 @@
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Reflection;
+using Mono.Cecil.Cil;
+using MonoMod.Cil;
 using Terraria;
-using Terraria.GameContent;
+using Terraria.GameInput;
 using Terraria.ID;
-using Terraria.Map;
 using Terraria.ModLoader;
-using Terraria.UI.Chat;
+using Terraria.UI;
 
 namespace PocketGuide;
 
 public class PocketGuideSystem : ModSystem
 {
-	public static List<Recipe> HoverRecipes { get; private set; } = new();
+	public static bool ForceGuideUI { get; private set; }
+	private static bool _wasForceGuideUI;
 
-	private static int _lastHoverItemType;
-
-	public override void PostDrawInterface(SpriteBatch spriteBatch)
+	public override void Load()
 	{
-		var mp = Main.LocalPlayer.GetModPlayer<PocketGuidePlayer>();
-		int hoverType = Main.HoverItem.type;
+		IL_Main.DrawInventory += PatchCloseGuard;
 
-		if (!mp.DollPresent || Main.HoverItem.IsAir)
-		{
-			HoverRecipes.Clear();
-			_lastHoverItemType = 0;
-			return;
-		}
+		MonoModHooks.Modify(
+			typeof(ItemSlot).GetMethod("OverrideHover",
+				BindingFlags.Public | BindingFlags.Static, null,
+				new[] { typeof(Item[]), typeof(int), typeof(int) }, null),
+			PatchOverrideHover);
 
-		if (hoverType != _lastHoverItemType)
-		{
-			_lastHoverItemType = hoverType;
-			CollectRecipesUsing(hoverType);
-		}
+		MonoModHooks.Modify(
+			typeof(ItemSlot).GetMethod("OverrideLeftClick",
+				BindingFlags.NonPublic | BindingFlags.Static),
+			PatchOverrideLeftClick);
 
-		DrawRecipeList(spriteBatch);
+		MonoModHooks.Modify(
+			typeof(ItemSlot).GetMethod("LeftClick",
+				BindingFlags.Public | BindingFlags.Static, null,
+				new[] { typeof(Item[]), typeof(int), typeof(int) }, null),
+			PatchLeftClick);
+
+		MonoModHooks.Modify(
+			typeof(ItemSlot).GetMethod("RightClick",
+				BindingFlags.Public | BindingFlags.Static, null,
+				new[] { typeof(Item[]), typeof(int), typeof(int) }, null),
+			PatchRightClick);
+
+		On_Player.dropItemCheck += HookDropItemCheck;
 	}
 
-	private static void DrawRecipeList(SpriteBatch spriteBatch)
+	public override void PostUpdateInput()
 	{
-		if (HoverRecipes.Count == 0)
+		if (Main.gameMenu || Main.netMode == NetmodeID.Server)
 			return;
 
-		var font = FontAssets.MouseText.Value;
-		float x = 20f;
-		float y = 80f;
-		float lineHeight = font.MeasureString("A").Y + 4f;
-		var sb = new StringBuilder();
+		var player = Main.LocalPlayer;
+		bool active = player.GetModPlayer<PocketGuidePlayer>().DollPresent;
+		bool guideAlive = NPC.AnyNPCs(NPCID.Guide);
 
-		for (int i = 0; i < HoverRecipes.Count; i++)
+		ForceGuideUI = active && guideAlive && Main.playerInventory
+			&& player.chest == -1 && Main.npcShop == 0 && !Main.InReforgeMenu;
+
+		if (ForceGuideUI)
 		{
-			Recipe recipe = HoverRecipes[i];
-			sb.Clear();
+			Main.InGuideCraftMenu = true;
 
-			sb.Append(recipe.createItem.Name);
-			if (recipe.createItem.stack > 1)
-				sb.Append(" (").Append(recipe.createItem.stack).Append(')');
+			Item source = !Main.mouseItem.IsAir ? Main.mouseItem
+				: !Main.HoverItem.IsAir ? Main.HoverItem
+				: new Item();
 
-			sb.Append(" = ");
-
-			for (int j = 0; j < recipe.requiredItem.Count; j++)
+			if (source.type != Main.guideItem.type)
 			{
-				if (j > 0)
-					sb.Append(" + ");
-				Item req = recipe.requiredItem[j];
-				sb.Append(req.Name);
-				if (req.stack > 1)
-					sb.Append(" (").Append(req.stack).Append(')');
+				Main.guideItem = source.Clone();
+				Recipe.FindRecipes();
 			}
+		}
+		else if (_wasForceGuideUI)
+		{
+			Main.guideItem = new Item();
+			Recipe.FindRecipes();
+		}
 
-			if (recipe.requiredTile.Count > 0)
-			{
-				sb.Append(" @ ");
-				for (int t = 0; t < recipe.requiredTile.Count; t++)
-				{
-					if (t > 0)
-						sb.Append(", ");
-					int tileId = recipe.requiredTile[t];
-					sb.Append(Lang.GetMapObjectName(MapHelper.TileToLookup(tileId, 0)));
-				}
-			}
+		_wasForceGuideUI = ForceGuideUI;
+	}
 
-			ChatManager.DrawColorCodedStringWithShadow(spriteBatch, font, sb.ToString(),
-				new Vector2(x, y), Color.White, 0f, Vector2.Zero, Vector2.One);
-			y += lineHeight;
+	// Prevent dropItemCheck from "returning" virtual guideItem to inventory.
+	private static void HookDropItemCheck(On_Player.orig_dropItemCheck orig, Player self)
+	{
+		if (ForceGuideUI)
+			Main.guideItem = new Item();
+		orig(self);
+	}
+
+	// Bypass talkNPC == -1 in the InGuideCraftMenu close guard.
+	// Vanilla: if (chest != -1 || npcShop != 0 || talkNPC == -1 || InReforgeMenu)
+	// Patch: replace talkNPC value with 0 when ForceGuideUI so the == -1 check fails.
+	private static void PatchCloseGuard(ILContext il)
+	{
+		var c = new ILCursor(il);
+
+		// Skip past first InGuideCraftMenu load (reforge close guard at ~line 54130)
+		c.GotoNext(i => i.MatchLdsfld<Main>(nameof(Main.InGuideCraftMenu)));
+		// Find second InGuideCraftMenu load (the else-if branch at ~line 54259)
+		c.GotoNext(i => i.MatchLdsfld<Main>(nameof(Main.InGuideCraftMenu)));
+		// Find talkNPC field load in the close guard condition
+		c.GotoNext(MoveType.After, i => i.MatchLdfld<Player>("talkNPC"));
+		// Replace talkNPC value on stack
+		c.EmitDelegate<Func<int, int>>(talkNPC => ForceGuideUI ? 0 : talkNPC);
+	}
+
+	// Suppress cursorOverride = 9 on inventory materials when ForceGuideUI.
+	// Two occurrences of: else if (context == 0 && Main.InGuideCraftMenu)
+	private static void PatchOverrideHover(ILContext il)
+	{
+		var c = new ILCursor(il);
+		for (int i = 0; i < 2; i++)
+		{
+			c.GotoNext(MoveType.After,
+				instr => instr.MatchLdsfld<Main>(nameof(Main.InGuideCraftMenu)));
+			c.EmitDelegate<Func<bool, bool>>(
+				inGuide => inGuide && !ForceGuideUI);
 		}
 	}
 
-	private static void CollectRecipesUsing(int itemType)
+	// Suppress shift-click swap into guideItem when ForceGuideUI.
+	// Target: else if (Main.InGuideCraftMenu) { Utils.Swap(...) }
+	private static void PatchOverrideLeftClick(ILContext il)
 	{
-		HoverRecipes.Clear();
+		var c = new ILCursor(il);
+		c.GotoNext(MoveType.After,
+			instr => instr.MatchLdsfld<Main>(nameof(Main.InGuideCraftMenu)));
+		c.EmitDelegate<Func<bool, bool>>(
+			inGuide => inGuide && !ForceGuideUI);
+	}
 
-		for (int i = 0; i < Recipe.maxRecipes; i++)
-		{
-			Recipe recipe = Main.recipe[i];
-			if (recipe.createItem.type == ItemID.None)
-				break;
-			if (recipe.Disabled)
-				continue;
+	// Prevent direct click on guide slot (context 7) when ForceGuideUI.
+	private static void PatchLeftClick(ILContext il)
+	{
+		var c = new ILCursor(il);
+		var skip = c.DefineLabel();
+		c.Emit(OpCodes.Ldarg_1);
+		c.Emit(OpCodes.Ldc_I4_7);
+		c.Emit(OpCodes.Bne_Un, skip);
+		c.EmitDelegate<Func<bool>>(() => ForceGuideUI);
+		c.Emit(OpCodes.Brfalse, skip);
+		c.Emit(OpCodes.Ret);
+		c.MarkLabel(skip);
+	}
 
-			for (int j = 0; j < recipe.requiredItem.Count; j++)
-			{
-				Item req = recipe.requiredItem[j];
-				if (req.type == ItemID.None)
-					break;
-
-				if (req.type == itemType || recipe.AcceptedByItemGroups(itemType, req.type))
-				{
-					HoverRecipes.Add(recipe);
-					break;
-				}
-			}
-		}
+	// Prevent right-click on guide slot (context 7) when ForceGuideUI.
+	private static void PatchRightClick(ILContext il)
+	{
+		var c = new ILCursor(il);
+		var skip = c.DefineLabel();
+		c.Emit(OpCodes.Ldarg_1);
+		c.Emit(OpCodes.Ldc_I4_7);
+		c.Emit(OpCodes.Bne_Un, skip);
+		c.EmitDelegate<Func<bool>>(() => ForceGuideUI);
+		c.Emit(OpCodes.Brfalse, skip);
+		c.Emit(OpCodes.Ret);
+		c.MarkLabel(skip);
 	}
 }
