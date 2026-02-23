@@ -16,6 +16,7 @@ public class PocketGuideSystem : ModSystem
 	public static bool ForceGuideUI { get; private set; }
 	private static bool _wasForceGuideUI;
 	private static int _lastSourceType;
+	private static int _savedFocusRecipe;
 
 	public override void Load()
 	{
@@ -59,18 +60,22 @@ public class PocketGuideSystem : ModSystem
 				_lastSourceType = sourceType;
 				if (sourceType != 0)
 				{
+					if (!ForceGuideUI)
+						_savedFocusRecipe = Main.focusRecipe;
 					Main.guideItem.SetDefaults(sourceType);
 					Recipe.FindRecipes();
 					if (Main.numAvailableRecipes == 0)
 					{
 						Main.guideItem = new Item();
 						Recipe.FindRecipes();
+						RestoreFocusRecipe();
 					}
 				}
 				else
 				{
 					Main.guideItem = new Item();
 					Recipe.FindRecipes();
+					RestoreFocusRecipe();
 				}
 			}
 
@@ -85,11 +90,18 @@ public class PocketGuideSystem : ModSystem
 				Main.InGuideCraftMenu = false;
 				Main.guideItem = new Item();
 				Recipe.FindRecipes();
+				RestoreFocusRecipe();
 			}
 			_lastSourceType = 0;
 		}
 
 		_wasForceGuideUI = ForceGuideUI;
+	}
+
+	private static void RestoreFocusRecipe()
+	{
+		Main.focusRecipe = Math.Clamp(_savedFocusRecipe, 0,
+			Math.Max(0, Main.numAvailableRecipes - 1));
 	}
 
 	// Prevent dropItemCheck from "returning" virtual guideItem to inventory.
