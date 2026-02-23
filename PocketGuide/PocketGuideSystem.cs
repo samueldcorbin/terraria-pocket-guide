@@ -49,8 +49,11 @@ public class PocketGuideSystem : ModSystem
 
 		if (pocketGuideActive)
 		{
+			// mouseItem is always current; HoverItem is from previous frame's draw.
+			// Gate HoverItem on mouseInterface (also from previous draw) so that
+			// moving the mouse to empty space / the world clears the guide.
 			Item source = !Main.mouseItem.IsAir ? Main.mouseItem
-				: !Main.HoverItem.IsAir ? Main.HoverItem
+				: (player.mouseInterface && !Main.HoverItem.IsAir) ? Main.HoverItem
 				: new Item();
 
 			if (source.type != Main.guideItem.type)
@@ -61,6 +64,11 @@ public class PocketGuideSystem : ModSystem
 
 			ForceGuideUI = !Main.guideItem.IsAir && Main.numAvailableRecipes > 0;
 			Main.InGuideCraftMenu = ForceGuideUI;
+
+			// Clear guideItem when not showing UI, so vanilla dropItemCheck
+			// doesn't "return" our cloned item to the player's inventory.
+			if (!ForceGuideUI)
+				Main.guideItem = new Item();
 		}
 		else
 		{
@@ -77,11 +85,18 @@ public class PocketGuideSystem : ModSystem
 	}
 
 	// Prevent dropItemCheck from "returning" virtual guideItem to inventory.
+	// Save/restore so guideItem survives into the draw phase for DrawGuideCraftText.
 	private static void HookDropItemCheck(On_Player.orig_dropItemCheck orig, Player self)
 	{
 		if (ForceGuideUI)
+		{
+			var saved = Main.guideItem;
 			Main.guideItem = new Item();
-		orig(self);
+			orig(self);
+			Main.guideItem = saved;
+		}
+		else
+			orig(self);
 	}
 
 	// Bypass talkNPC == -1 in the InGuideCraftMenu close guard.
@@ -104,9 +119,9 @@ public class PocketGuideSystem : ModSystem
 		c.EmitDelegate<Func<int, int>>(talkNPC => ForceGuideUI ? 0 : talkNPC);
 	}
 
-	// Skip the material slot block (hit-test, interactions, Draw) after DrawGuideCraftText
-	// when ForceGuideUI is active. This prevents the "Place a material here" slot from
-	// appearing and avoids HoverItem feedback loops.
+	// Make the material slot non-interactive when ForceGuideUI by failing the hit-test.
+	// The slot icon (ItemSlot.Draw) still renders; only OverrideHover/LeftClick/
+	// RightClick/MouseHover inside the if-block are skipped.
 	private static void PatchSkipMaterialSlot(ILContext il)
 	{
 		var c = new ILCursor(il);
@@ -117,22 +132,12 @@ public class PocketGuideSystem : ModSystem
 			&& i.Operand is MethodReference mr
 			&& mr.Name == "DrawGuideCraftText");
 
-		// Find the ItemSlot.Draw call for guideItem (context 7) that ends the block.
-		// This is the first ItemSlot.Draw after DrawGuideCraftText.
-		var end = c.Clone();
-		end.GotoNext(MoveType.After, i =>
-			i.OpCode == OpCodes.Call
-			&& i.Operand is MethodReference mr
-			&& mr.Name == "Draw"
-			&& mr.DeclaringType.Name == "ItemSlot");
+		// Find the next mouseX load — start of: if (mouseX >= inventoryX && ...)
+		c.GotoNext(MoveType.After, i =>
+			i.MatchLdsfld<Main>(nameof(Main.mouseX)));
 
-		// Mark the instruction after ItemSlot.Draw as our branch target
-		var skipTarget = end.DefineLabel();
-		end.MarkLabel(skipTarget);
-
-		// Emit: if (ForceGuideUI) goto skipTarget
-		c.EmitDelegate<Func<bool>>(() => ForceGuideUI);
-		c.Emit(OpCodes.Brtrue, skipTarget);
+		// Replace mouseX with int.MinValue when ForceGuideUI so the condition fails
+		c.EmitDelegate<Func<int, int>>(mx => ForceGuideUI ? int.MinValue : mx);
 	}
 
 	// Suppress cursorOverride = 9 on inventory materials when ForceGuideUI.
